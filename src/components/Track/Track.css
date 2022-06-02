@@ -2,6 +2,7 @@
 
     display: flex;
     align-items: center; border-bottom: 1px solid rgba(256,256,256,0.8);
+    justify-content: center;
 }
 
 .Track-action{
@@ -24,17 +25,25 @@
     float: grow 1;
     display:flex;
     flex-direction: column;
+    align-items: center;
     justify-content: center;
     height:180px;
     
 }
+.Track-information  p{
+    color: rgba(256, 256, 256, 0.8);
+    font-size: 2rem;
+    padding: 1rem;
+}
+.Track-information iframe{
+    min-width: 40vh;
+    font-size: 2rem;
+}
+.Track-information iframe span{
+    font-size: 4rem;
+}
+
 .Track-information h3{   
     margin-bottom: 0.22rem;
     
-}
-
-.Track-information p{
-    font-size: 0.83 rem;
-    font-weight: 300;
-    color: rgba(256, 256, 256, 0.8);
 }

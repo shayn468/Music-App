@@ -18,7 +18,7 @@ class SearchBar extends React.Component{
 
 
 handletermChange(event){
-    this.state({term : event.target.value});
+    this.setState({term : event.target.value});
 }
 
 search(){
@@ -34,11 +34,11 @@ handleEnter(event){ //keycode is user data which is pressing. 13 is the Ascii co
 render(){
     return(
         <div className= "SearchBar">
-        <input placeholder="Enter song, album or artist" onchange={this.handletermChange} onKeyUp={this.handleEnter} />
+        <input placeholder="Enter song, album or artist" onChange={this.handletermChange} onKeyUp={this.handleEnter} />
         <button className="SearchButton" onClick={this.search}> Search </button>
         </div>
     );
-``}
+}
     }
 
 export default SearchBar;

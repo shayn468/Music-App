@@ -1,9 +1,9 @@
 import React from 'react';
 import './App.css';
-import Playlist from "../Playlist/Playlist";
-import SearchBar from ".//SearchBar/SearchBar";
-import SearchResults from "../SearchResults/SearchResults";
-import Spotify from "../uitl/Spotify";
+// import Playlist from "../Playlist/Playlist";
+import SearchBar from "../SearchBar/SearchBar";
+import SearchResult from "../SearchResult/SearchResult";
+import Spotify from "../../util/Spotify";
 
 
 class App extends React.Component{
@@ -11,10 +11,12 @@ class App extends React.Component{
     super(props);
   
   this.state={
-    SearchResults: [],
+    SearchResult: [],
     PlaylistName: "New PlayList",
     PlaylistTracks: []
   };
+
+  
 
   this.search = this.search.bind(this);
   this.addTracks = this.addTracks.bind(this);
@@ -23,11 +25,33 @@ class App extends React.Component{
   this.UpdatePlaylistName = this.UpdatePlaylistName.bind(this);
   this.savePlayList = this.savePlayList.bind(this);
   this.doThese = this.doThese.bind(this);
+  
 }
 
- search(term){
-  Spotify.search(term).then(SearchResults => {
-    this.setState({SearchResults : SearchResults});
+componentDidMount() {
+  const accessTokenMatch = window.location.href.match(/access_token=([^&]*)/);
+  const expiresInMatch = window.location.href.match(/expires_in=([^&]*)/);
+  if(accessTokenMatch && expiresInMatch ){
+      let accessToken = accessTokenMatch[1];
+      const expiresIn = Number(expiresInMatch[1]);
+      const d = new Date();
+      d.setTime(d.getTime() + (expiresIn*1000));
+      let expires = "expires="+ d.toUTCString();
+      document.cookie = "access_token=" + accessTokenMatch[1] + ";" + expiresIn + ";path=/";
+      window.setTimeout(()=> (accessToken=""), expiresIn * 1000 );
+      window.history.pushState("Access Token", null, "/"); // this clear the parameters and allowing us to get new access token when it expires.
+      
+
+      const src_term = Spotify.getCookie('search_term')
+      console.log("searching ",src_term)
+      this.search(src_term)
+  }
+}
+
+search(term){
+  Spotify.search(term).then(SearchResultItem => {
+    this.setState({SearchResult : SearchResultItem});
+    console.log(SearchResultItem)
   });
 }
 
@@ -42,7 +66,7 @@ addTracks(track){
 
 removeTrack(track){
   let Tracks = this.state.PlaylistTracks;
-  let TrackSearchBar = this.state.SearchResults;
+  let TrackSearchBar = this.state.SearchResult;
 
 Tracks = Tracks.filter(currentTracks => currentTracks.id !== track.id);
 TrackSearchBar.unshift(track);
@@ -50,9 +74,9 @@ this.setState({PlaylistTracks: Tracks});
 }
 
 removeTrackSearch(track){
-  let Tracks = this.state.SearchResults;
+  let Tracks = this.state.SearchResult;
   Tracks = Tracks.filter(currentTracks => currentTracks.id !== track.id);
-  this.setState({SearchResults : Track}) 
+  this.setState({SearchResult : Tracks}) 
 }
 
 doThese(track){
@@ -68,7 +92,7 @@ UpdatePlaylistName(name){
 
 savePlayList(){
   const trackuris = this.state.PlaylistTracks.map(track => track.uri);
-  Spotify.savePlayList(this.state.PlaylistName, trackuris).then( ()=> {
+  Spotify.savePlaylist(this.state.PlaylistName, trackuris).then( ()=> {
     this.setState({
       UpdatePlaylistName: "New PlayList",
       PlaylistTracks: []
@@ -76,25 +100,48 @@ savePlayList(){
   });
 }
 
-}
+render(){
+  return(
+  // <div>
 
-function App() {
-  return (
-    <div>
+     <div className='App'>
       <h1>
-        <a href='http://localhost:3000'>Music-Hub</a>
-      </h1>
-
-    <div className='App'>
-      <SearchBar onSearch= {this.search} />
-      <div className='App-playlist'>
-        <SearchResults SearchResults = {this.state.SearchResults} onAdd ={this.doThese}/>
-        <Playlist PlaylistTracks = {this.state.PlaylistTracks} onNameChange = {this.UpdatePlaylistName} onRemove = {this.removeTrack}  onSave = {this.savePlayList}/>
-
-      </div>
+         <a href='http://localhost:3000'>Music-Hub</a>
+       </h1>
+       <SearchBar onSearch= {this.search} />
+       {/* <div className='App-playlist'> */}
+         <SearchResult SearchResult = {this.state.SearchResult} onAdd ={this.doThese}/>
+         {/* <Playlist PlaylistTracks = {this.state.PlaylistTracks} onNameChange = {this.UpdatePlaylistName} onRemove = {this.removeTrack}  onSave = {this.savePlayList}/> */}
+        {/* <Spotify/> */}
+        {/* </div> */}
     </div>
-    </div>
-  );
+    // </div>
+    )
 }
+
+}
+
+// function App() {
+
+//   return (
+//     <div>
+//       <h1>
+//         <a href='http://localhost:3000'>Music-Hub</a>
+//       </h1>
+
+//     <div className='App'>
+//       <SearchBar onSearch= {this.search} />
+//       {/* <SearchBar /> */}
+//       <div className='App-playlist'>
+//         {/* <SearchResult SearchResult = {this.state.SearchResult} onAdd ={this.doThese}/> */}
+//         {/* <Playlist PlaylistTracks = {this.state.PlaylistTracks} onNameChange = {this.UpdatePlaylistName} onRemove = {this.removeTrack}  onSave = {this.savePlayList}/> */}
+//     {/* <Spotify/> */}
+//       </div>
+//     </div>
+//     </div>
+//   );
+// }
+
+
 
 export default App;

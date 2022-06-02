@@ -1,9 +1,9 @@
 const clientId = "596eeff228574af894df4dff220cd964";
 const redirectUri = "http://localhost:3000/";   //Have to add this on spotify redirect uri's on the spotify api.
-let accessToken;
+let accessToken ="";
 
 const Spotify={
-    getAccessToken(){
+    getAccessToken(term){
         if(accessToken){
             return accessToken;
         }
@@ -12,20 +12,35 @@ const Spotify={
     if(accessTokenMatch && expiresInMatch ){
         accessToken = accessTokenMatch[1];
         const expiresIn = Number(expiresInMatch[1]);
+        const d = new Date();
+        d.setTime(d.getTime() + (expiresIn*1000));
+        let expires = "expires="+ d.toUTCString();
+        document.cookie = "access_token=" + accessTokenMatch[1] + ";" + expires + ";path=/";
         window.setTimeout(()=> (accessToken=""), expiresIn * 1000 );
         window.history.pushState("Access Token", null, "/"); // this clear the parameters and allowing us to get new access token when it expires.
         return accessToken;
     }else{
-        const accessUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_url=${redirectUri}`;
+        const accessUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${redirectUri}`;
+        const d2 = new Date();
+        d2.setTime(d2.getTime() + (10*1000));
+        let expires2 = "expires="+ d2.toUTCString();
+        document.cookie = "search_term=" + term + ";" + expires2 + ";path=/";
         window.location =accessUrl;
+        // accessTokenMatch = window.location.href.match(/access_token=([^&]*)/);
+        
+        alert("now you can search")
     }
 },
 search(term){
-    const accessToken= Spotify.getAccessToken();
+    let token = Spotify.getCookie("access_token")
+    console.log("Cookie access_token: ",token)
+    if(token=="")
+        {console.log("Access token not found")
+        accessToken= Spotify.getAccessToken(term);}
     
     return fetch(`https://api.spotify.com/v1/search?type=track&q=${term}`, {
         headers:{
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${accessToken || token}`
         }
     
     })
@@ -80,7 +95,24 @@ search(term){
             });
         });
 
+    },
+    getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+          }
+          if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+          }
+        }
+        return "";
     }
 }
+
+
 
 export default Spotify;
